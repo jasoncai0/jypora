@@ -1,0 +1,239 @@
+:root {
+  --bg: #ffffff;
+  --fg: #2c2c2c;
+  --muted: #8a8a8a;
+  --border: #eaeaea;
+  --sidebar-bg: #f7f7f7;
+  --accent: #4c8bf5;
+}
+
+:root[data-theme='dark'] {
+  --bg: #1e1e1e;
+  --fg: #d4d4d4;
+  --muted: #808080;
+  --border: #333333;
+  --sidebar-bg: #252525;
+  --accent: #5a9bff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+}
+
+.jypora-app {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.jypora-app.focus .jypora-main {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* Sidebar */
+.jypora-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 12px 8px;
+  padding-top: 32px;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.sidebar-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.sidebar-tree {
+  overflow: auto;
+  flex: 1;
+  font-size: 13px;
+}
+
+.tree-row {
+  padding: 3px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tree-row:hover {
+  background: rgba(128, 128, 128, 0.12);
+}
+
+.tree-row.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.chevron {
+  display: inline-block;
+  width: 14px;
+  color: var(--muted);
+}
+
+.sidebar-empty {
+  padding: 12px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+/* Main */
+.jypora-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.jypora-editor-wrap {
+  flex: 1;
+  overflow: auto;
+}
+
+.jypora-wysiwyg,
+.jypora-source {
+  min-height: 100%;
+}
+
+.jypora-source {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  padding: 40px max(40px, calc((100% - 800px) / 2));
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.typewriter {
+  scroll-padding: 40vh;
+}
+
+/* Outline */
+.jypora-outline {
+  width: 220px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  background: var(--sidebar-bg);
+  overflow: auto;
+  font-size: 13px;
+}
+
+.outline-header {
+  padding: 12px;
+  padding-top: 32px;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.outline-item {
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.outline-item:hover {
+  background: rgba(128, 128, 128, 0.12);
+}
+
+.outline-empty {
+  padding: 10px;
+  color: var(--muted);
+}
+
+/* Status bar */
+.jypora-statusbar {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 4px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.status-spacer {
+  flex: 1;
+}
+
+.status-dirty {
+  color: var(--accent);
+}
+
+/* Find & replace */
+.jypora-find {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--sidebar-bg);
+}
+
+.find-input {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.find-opt {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.find-count {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.find-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.find-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

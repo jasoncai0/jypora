@@ -1,0 +1,53 @@
+{
+  "name": "jypora",
+  "version": "0.1.0",
+  "description": "An open-source, Typora-like seamless live-preview Markdown editor",
+  "author": "jasoncai0",
+  "license": "MIT",
+  "main": "out/main/index.js",
+  "homepage": "https://github.com/jasoncai0/jypora",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jasoncai0/jypora.git"
+  },
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "package": "electron-vite build && electron-builder --mac --publish never",
+    "package:dir": "electron-vite build && electron-builder --mac --dir"
+  },
+  "dependencies": {
+    "@milkdown/crepe": "^7.5.0",
+    "@milkdown/kit": "^7.5.0",
+    "electron-store": "^10.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "@types/node": "^22.7.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "@vitest/coverage-v8": "^2.1.0",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.0",
+    "electron-vite": "^2.3.0",
+    "jsdom": "^25.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.6.0",
+    "vite": "^5.4.0",
+    "vitest": "^2.1.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "esbuild"
+    ]
+  }
+}

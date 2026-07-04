@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"cat /private/tmp/claude-501/-Users-mac-workspace/996d93a3-604d-4e24-af63-26b35ce848b6/tasks/bsokrkmyf.output 2>&1 | tail -5; echo \\\"---\\\"; ls node_modules/electron/dist 2>&1 | head -3; cat...",
+  "error": "Exit code 1\n---\nls: node_modules/electron/dist: No such file or directory\ncat: node_modules/electron/path.txt: No such file or directory",
+  "timestamp": "2026-07-04T06:27:36.017Z",
+  "retry_count": 1
+}
