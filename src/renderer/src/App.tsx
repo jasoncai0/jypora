@@ -13,6 +13,11 @@ import { isDirty } from '../../shared/types'
 import { MenuActionType } from '../../shared/ipc'
 import { BUILTIN_THEMES, ThemeDefinition, findTheme } from '../../shared/themes'
 import { isFormatAction } from './editor/format'
+import {
+  installAnchorInterceptor,
+  scrollSourceToHeading,
+  scrollToHeadingIndex
+} from './editor/navigation'
 
 export function App(): JSX.Element {
   const [state, dispatch] = useReducer(reducer, initialState)
@@ -131,6 +136,18 @@ export function App(): JSX.Element {
   // Recent-workspace clicks from the native File > Open Recent menu.
   useEffect(() => window.jypora.onOpenRecent((path) => dispatch({ type: 'set-workspace', root: path })), [])
 
+  // In-document anchor links (e.g. a hand-written TOC) scroll instead of navigating.
+  useEffect(() => installAnchorInterceptor(), [])
+
+  const goToHeading = useCallback((index: number) => {
+    if (stateRef.current.sourceMode) {
+      const textarea = document.querySelector<HTMLTextAreaElement>('.jypora-source')
+      if (textarea) scrollSourceToHeading(textarea, index)
+      return
+    }
+    scrollToHeadingIndex(index)
+  }, [])
+
   return (
     <div className={`jypora-app ${state.focusMode ? 'focus' : ''}`}>
       {state.sidebarVisible && !state.focusMode && (
@@ -166,7 +183,7 @@ export function App(): JSX.Element {
         <StatusBar content={state.doc.content} dirty={isDirty(state.doc)} sourceMode={state.sourceMode} />
       </main>
       {state.outlineVisible && !state.focusMode && (
-        <Outline content={state.doc.content} onSelect={() => undefined} />
+        <Outline content={state.doc.content} onSelect={goToHeading} />
       )}
     </div>
   )

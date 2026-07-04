@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import {
   BUILTIN_THEMES,
+  crepeVarsFor,
   findTheme,
   mergeThemes,
   parseUserTheme,
@@ -70,6 +71,56 @@ describe('parseUserTheme', () => {
   test('defaults isDark to false', () => {
     const parsed = parseUserTheme({ ...valid, isDark: undefined })
     expect(parsed?.isDark).toBe(false)
+  })
+})
+
+describe('crepeVarsFor', () => {
+  const REQUIRED_CREPE_KEYS = [
+    'crepe-color-background',
+    'crepe-color-on-background',
+    'crepe-color-surface',
+    'crepe-color-surface-low',
+    'crepe-color-on-surface',
+    'crepe-color-on-surface-variant',
+    'crepe-color-outline',
+    'crepe-color-primary',
+    'crepe-color-secondary',
+    'crepe-color-on-secondary',
+    'crepe-color-inverse',
+    'crepe-color-on-inverse',
+    'crepe-color-inline-code',
+    'crepe-color-error',
+    'crepe-color-hover',
+    'crepe-color-selected',
+    'crepe-color-inline-area',
+    'crepe-font-title',
+    'crepe-font-default',
+    'crepe-font-code',
+    'crepe-shadow-1',
+    'crepe-shadow-2'
+  ]
+
+  test('every builtin theme yields the full crepe variable set', () => {
+    for (const theme of BUILTIN_THEMES) {
+      const vars = crepeVarsFor(theme)
+      for (const key of REQUIRED_CREPE_KEYS) {
+        expect(vars[key], `${theme.id} missing ${key}`).toBeTruthy()
+      }
+    }
+  })
+
+  test('maps app palette onto editor surface', () => {
+    const dark = findTheme(BUILTIN_THEMES, 'dark')
+    const vars = crepeVarsFor(dark)
+    expect(vars['crepe-color-background']).toBe(dark.vars.bg)
+    expect(vars['crepe-color-primary']).toBe(dark.vars.accent)
+    expect(vars['crepe-color-hover']).toContain('color-mix')
+  })
+
+  test('error/inline-code colors flip with isDark', () => {
+    const light = crepeVarsFor(findTheme(BUILTIN_THEMES, 'light'))
+    const dark = crepeVarsFor(findTheme(BUILTIN_THEMES, 'dark'))
+    expect(light['crepe-color-error']).not.toBe(dark['crepe-color-error'])
   })
 })
 

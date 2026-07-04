@@ -3,7 +3,8 @@ import { extractOutline } from '../../../shared/markdown'
 
 interface OutlineProps {
   readonly content: string
-  readonly onSelect: (slug: string) => void
+  /** Called with the heading's index in outline (document) order. */
+  readonly onSelect: (index: number) => void
 }
 
 /** Document outline derived from the Markdown heading structure. */
@@ -16,12 +17,12 @@ export function Outline({ content, onSelect }: OutlineProps): JSX.Element {
       {headings.length === 0 ? (
         <div className="outline-empty">No headings</div>
       ) : (
-        headings.map((h) => (
+        headings.map((h, index) => (
           <div
             key={`${h.slug}-${h.line}`}
             className="outline-item"
             style={{ paddingLeft: `${(h.level - 1) * 12 + 10}px` }}
-            onClick={() => onSelect(h.slug)}
+            onClick={() => onSelect(index)}
             title={h.text}
           >
             {h.text}

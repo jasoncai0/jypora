@@ -48,12 +48,16 @@ export function registerTerminalHandlers(getWindow: () => BrowserWindow | null):
     }
 
     const cwd = resolveCwd(docPath)
-    const proc = nodePty.spawn(defaultShell(), [], {
-      name: 'xterm-color',
+    const shell = defaultShell()
+    // Launch as a login shell so the user's profile (~/.zprofile, ~/.zshrc,
+    // ~/.bash_profile) is sourced — PATH, aliases, prompt, env vars all load.
+    const args = process.platform === 'win32' ? [] : ['-l']
+    const proc = nodePty.spawn(shell, args, {
+      name: 'xterm-256color',
       cols,
       rows,
       cwd,
-      env: process.env as Record<string, string>
+      env: { ...process.env, TERM: 'xterm-256color' } as Record<string, string>
     })
     pty = proc as unknown as PtyLike
 

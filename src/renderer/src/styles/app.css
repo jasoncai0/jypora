@@ -16,8 +16,44 @@
   --accent: #5a9bff;
 }
 
+/* Native widgets (scrollbars, form controls) must follow the active theme. */
+:root {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
 * {
   box-sizing: border-box;
+}
+
+/* Themed scrollbars — consistent across light/dark instead of OS defaults. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--fg), transparent 72%);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--fg), transparent 55%);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 html,
@@ -122,6 +158,33 @@ body,
 .jypora-wysiwyg,
 .jypora-source {
   min-height: 100%;
+}
+
+/* The editor surface must follow the app theme (Crepe vars are set on :root). */
+.milkdown {
+  background: var(--bg);
+  color: var(--fg);
+  caret-color: var(--accent);
+}
+
+.milkdown .ProseMirror {
+  caret-color: var(--accent);
+}
+
+.milkdown .ProseMirror ::selection,
+.milkdown .ProseMirror::selection,
+.jypora-source::selection {
+  background: color-mix(in srgb, var(--accent), transparent 70%);
+}
+
+/* In-document anchor targets get breathing room when scrolled to. */
+.milkdown h1,
+.milkdown h2,
+.milkdown h3,
+.milkdown h4,
+.milkdown h5,
+.milkdown h6 {
+  scroll-margin-top: 24px;
 }
 
 .jypora-source {

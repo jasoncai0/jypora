@@ -69,6 +69,8 @@ export function buildMenu(getWindow: () => BrowserWindow | null, options: MenuOp
       label: 'File',
       submenu: [
         { label: 'New', accelerator: 'CmdOrCtrl+N', click: () => send(win(), 'new') },
+        // Muscle-memory alias: Cmd+T also creates a new document (Typora-style tabs).
+        { label: 'New Document', accelerator: 'CmdOrCtrl+T', visible: false, acceleratorWorksWhenHidden: true, click: () => send(win(), 'new') },
         { label: 'Open…', accelerator: 'CmdOrCtrl+O', click: () => send(win(), 'open') },
         { label: 'Open Folder…', accelerator: 'CmdOrCtrl+Shift+K', click: () => send(win(), 'open-folder') },
         recentSubmenu(win, options.recentWorkspaces),

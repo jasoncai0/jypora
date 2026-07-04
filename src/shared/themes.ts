@@ -88,6 +88,52 @@ export function parseUserTheme(input: unknown): ThemeDefinition | null {
   return { id: obj.id, name: obj.name, isDark: obj.isDark === true, vars }
 }
 
+/**
+ * Derive the Milkdown Crepe editor variables (`--crepe-*`) from a theme so the
+ * editor chrome (cursor, selection, hover, dropdowns, toolbars) matches the app
+ * theme. Crepe's own theme CSS defines these on `.milkdown`; we generate them
+ * instead so every jypora theme — built-in or user-provided — styles the editor
+ * consistently. Uses CSS `color-mix()` so no color math is needed in JS.
+ */
+export function crepeVarsFor(theme: ThemeDefinition): Record<string, string> {
+  const bg = theme.vars.bg
+  const fg = theme.vars.fg
+  const muted = theme.vars.muted
+  const accent = theme.vars.accent
+  const surface = theme.vars['sidebar-bg']
+  const mix = (base: string, tint: string, pct: number): string =>
+    `color-mix(in srgb, ${base}, ${tint} ${pct}%)`
+
+  return {
+    'crepe-color-background': bg,
+    'crepe-color-on-background': fg,
+    'crepe-color-surface': surface,
+    'crepe-color-surface-low': mix(surface, bg, 50),
+    'crepe-color-on-surface': fg,
+    'crepe-color-on-surface-variant': muted,
+    'crepe-color-outline': muted,
+    'crepe-color-primary': accent,
+    'crepe-color-secondary': mix(bg, accent, 18),
+    'crepe-color-on-secondary': fg,
+    'crepe-color-inverse': fg,
+    'crepe-color-on-inverse': bg,
+    'crepe-color-inline-code': theme.isDark ? '#ffb4ab' : '#ba1a1a',
+    'crepe-color-error': theme.isDark ? '#ffb4ab' : '#ba1a1a',
+    'crepe-color-hover': mix(bg, fg, 5),
+    'crepe-color-selected': mix(bg, fg, 12),
+    'crepe-color-inline-area': mix(bg, fg, 8),
+    'crepe-font-title':
+      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
+    'crepe-font-default':
+      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
+    'crepe-font-code': "'SFMono-Regular', Menlo, Monaco, Consolas, monospace",
+    'crepe-shadow-1':
+      '0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3)',
+    'crepe-shadow-2':
+      '0px 2px 6px 2px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3)'
+  }
+}
+
 /** Merge user themes over built-ins, de-duplicating by id (user wins). */
 export function mergeThemes(
   builtins: readonly ThemeDefinition[],

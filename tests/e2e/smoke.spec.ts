@@ -44,6 +44,77 @@ test('a theme is applied to the document root', async () => {
   expect(['light', 'dark']).toContain(theme)
 })
 
+test('crepe editor variables are populated (cursor/selection theming)', async () => {
+  const vars = await page.evaluate(() => {
+    const style = document.documentElement.style
+    return {
+      background: style.getPropertyValue('--crepe-color-background'),
+      primary: style.getPropertyValue('--crepe-color-primary'),
+      selected: style.getPropertyValue('--crepe-color-selected')
+    }
+  })
+  expect(vars.background.trim()).not.toBe('')
+  expect(vars.primary.trim()).not.toBe('')
+  expect(vars.selected.trim()).not.toBe('')
+})
+
+test('dark theme switches color-scheme so native widgets follow', async () => {
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'theme:dark')
+  })
+  await expect
+    .poll(() => page.evaluate(() => getComputedStyle(document.documentElement).colorScheme))
+    .toContain('dark')
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'theme:light')
+  })
+  await expect
+    .poll(() => page.evaluate(() => getComputedStyle(document.documentElement).colorScheme))
+    .toContain('light')
+})
+
+test('outline click and anchor links scroll to headings', async () => {
+  // Build a long doc with two headings and a TOC anchor link via source mode.
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'toggle-source')
+  })
+  const textarea = page.locator('.jypora-source')
+  await textarea.waitFor()
+  const filler = Array.from({ length: 60 }, (_, i) => `filler line ${i}`).join('\n\n')
+  await textarea.fill(`# Top\n\n[jump to bottom](#bottom-section)\n\n${filler}\n\n## Bottom Section\n\nend`)
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'toggle-source')
+  })
+  await page.locator('.milkdown h2').waitFor()
+
+  // Anchor link click scrolls the bottom heading into view.
+  const wrap = page.locator('.jypora-editor-wrap')
+  await page.locator('.milkdown a[href="#bottom-section"]').click()
+  await expect
+    .poll(async () => {
+      return page.evaluate(() => {
+        const h2 = document.querySelector('.milkdown h2')
+        return h2 ? h2.getBoundingClientRect().top < window.innerHeight : false
+      })
+    })
+    .toBe(true)
+
+  // Outline click navigates too: open outline, click the last item.
+  await wrap.evaluate((el) => el.scrollTo(0, 0))
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'toggle-outline')
+  })
+  await page.locator('.jypora-outline .outline-item').last().click()
+  await expect
+    .poll(async () => {
+      return page.evaluate(() => {
+        const h2 = document.querySelector('.milkdown h2')
+        return h2 ? h2.getBoundingClientRect().top < window.innerHeight : false
+      })
+    })
+    .toBe(true)
+})
+
 test('mermaid code blocks render as diagrams', async () => {
   // Drive source mode via the menu-action IPC, type a mermaid block, switch back.
   await app.evaluate(({ BrowserWindow }) => {
