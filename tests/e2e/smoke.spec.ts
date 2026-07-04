@@ -16,6 +16,11 @@ test.beforeAll(async () => {
 })
 
 test.afterAll(async () => {
+  // Reset the document so the unsaved-changes close guard doesn't block exit.
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0]?.webContents.send('menu:action', 'new')
+  })
+  await page.waitForTimeout(300)
   await app.close()
 })
 
@@ -133,6 +138,28 @@ test('Copy as Markdown puts the document source on the clipboard', async () => {
   await app.evaluate(({ BrowserWindow }) => {
     BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'toggle-source')
   })
+})
+
+test('find panel highlights matches and reports n/m', async () => {
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'toggle-source')
+  })
+  const textarea = page.locator('.jypora-source')
+  await textarea.waitFor()
+  await textarea.fill('needle one\n\nneedle two\n\nneedle three')
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'toggle-source')
+  })
+  await page.locator('.milkdown').waitFor()
+
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'find')
+  })
+  const findInput = page.locator('.jypora-find .find-input').first()
+  await findInput.fill('needle')
+  // Native findInPage reports active/total via found-in-page.
+  await expect(page.locator('.find-count')).toHaveText(/\d+\/\d+/, { timeout: 5000 })
+  await page.keyboard.press('Escape')
 })
 
 test('sidebar can be resized by dragging its handle', async () => {

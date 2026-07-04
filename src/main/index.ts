@@ -1,4 +1,4 @@
-import { app, BrowserWindow, clipboard, ipcMain, nativeTheme } from 'electron'
+import { app, BrowserWindow, clipboard, dialog, ipcMain, nativeTheme } from 'electron'
 import { createWindow } from './window'
 import { buildMenu } from './menu'
 import { registerFileHandlers } from './ipc/file-handlers'
@@ -43,6 +43,71 @@ function registerSettingsHandlers(): void {
   })
 }
 
+/** Native in-page find: highlights matches and reports n/m to the renderer. */
+function registerFindHandlers(): void {
+  // Note: Electron's `findNext` option means "begin a NEW find session" —
+  // true for the first request of a query, false for next/prev follow-ups.
+  ipcMain.on(IpcChannel.FindStart, (_e, text: string, forward: boolean, first: boolean) => {
+    const contents = mainWindow?.webContents
+    if (!contents || typeof text !== 'string' || text.length === 0) return
+    contents.findInPage(text, { forward: forward !== false, findNext: first === true })
+  })
+  ipcMain.on(IpcChannel.FindStop, (_e, keepSelection: boolean) => {
+    mainWindow?.webContents.stopFindInPage(keepSelection ? 'keepSelection' : 'clearSelection')
+  })
+}
+
+/** Track document dirtiness and confirm before closing with unsaved changes. */
+let docIsDirty = false
+let forceClose = false
+
+function registerCloseGuard(win: BrowserWindow): void {
+  win.on('close', (event) => {
+    if (!docIsDirty || forceClose) return
+    event.preventDefault()
+    void dialog
+      .showMessageBox(win, {
+        type: 'warning',
+        buttons: ['Save', "Don't Save", 'Cancel'],
+        defaultId: 0,
+        cancelId: 2,
+        message: 'You have unsaved changes.',
+        detail: 'Do you want to save your changes before closing?'
+      })
+      .then(({ response }) => {
+        if (response === 2) return // Cancel
+        if (response === 1) {
+          forceClose = true
+          win.close()
+          return
+        }
+        // Save: ask the renderer to save, then close once the dirty flag clears.
+        win.webContents.send(IpcChannel.MenuAction, 'save')
+        const started = Date.now()
+        const timer = setInterval(() => {
+          if (!docIsDirty) {
+            clearInterval(timer)
+            forceClose = true
+            win.close()
+          } else if (Date.now() - started > 15_000) {
+            clearInterval(timer) // save dialog canceled or failed — stay open
+          }
+        }, 100)
+      })
+  })
+}
+
+/** Per-window wiring: find-result forwarding and the unsaved-changes guard. */
+function wireWindow(win: BrowserWindow): void {
+  win.webContents.on('found-in-page', (_e, result) => {
+    win.webContents.send(IpcChannel.FindResult, {
+      activeMatchOrdinal: result.activeMatchOrdinal,
+      matches: result.matches
+    })
+  })
+  registerCloseGuard(win)
+}
+
 app.whenReady().then(async () => {
   await ensureThemesDir()
   themes = await getAllThemes()
@@ -51,8 +116,13 @@ app.whenReady().then(async () => {
   registerExportHandlers(getWindow)
   registerTerminalHandlers(getWindow)
   registerSettingsHandlers()
+  registerFindHandlers()
+  ipcMain.on(IpcChannel.SetDirty, (_e, value: boolean) => {
+    docIsDirty = value === true
+  })
 
   mainWindow = createWindow()
+  wireWindow(mainWindow)
   refreshMenu()
 
   nativeTheme.on('updated', () => {
@@ -66,6 +136,7 @@ app.whenReady().then(async () => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       mainWindow = createWindow()
+      wireWindow(mainWindow)
       refreshMenu()
     }
   })

@@ -1,14 +1,65 @@
 import { promises as fs } from 'node:fs'
-import { join } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 import { dialog, ipcMain, BrowserWindow } from 'electron'
 import { IpcChannel } from '../../shared/ipc'
 import { buildFileNodes, isMarkdownFile, shouldIgnore } from '../../shared/filetree'
 import { fuzzyMatch, rankMatches } from '../../shared/search'
-import { FileNode, OpenFileResult } from '../../shared/types'
+import { ContentMatch, FileNode, OpenFileResult } from '../../shared/types'
 import { pushRecentFile, pushRecentWorkspace } from '../settings'
 
 const MAX_SEARCH_RESULTS = 200
 const MAX_SEARCH_DEPTH = 6
+const MAX_CONTENT_RESULTS = 100
+const MAX_PREVIEW_LENGTH = 120
+
+/** Collect every markdown file path under `root` (bounded walk). */
+async function collectMarkdownFiles(root: string): Promise<string[]> {
+  const files: string[] = []
+  async function walk(dir: string, depth: number): Promise<void> {
+    if (depth > MAX_SEARCH_DEPTH) return
+    let entries: import('node:fs').Dirent[]
+    try {
+      entries = await fs.readdir(dir, { withFileTypes: true })
+    } catch {
+      return
+    }
+    for (const entry of entries) {
+      if (shouldIgnore(entry.name)) continue
+      const full = join(dir, entry.name)
+      if (entry.isDirectory()) await walk(full, depth + 1)
+      else if (isMarkdownFile(entry.name)) files.push(full)
+    }
+  }
+  await walk(root, 0)
+  return files
+}
+
+/** Case-insensitive line-level content search across workspace markdown files. */
+async function searchContent(root: string, query: string): Promise<ContentMatch[]> {
+  const needle = query.toLowerCase()
+  const results: ContentMatch[] = []
+  for (const path of await collectMarkdownFiles(root)) {
+    if (results.length >= MAX_CONTENT_RESULTS) break
+    let text: string
+    try {
+      text = await fs.readFile(path, 'utf-8')
+    } catch {
+      continue
+    }
+    const lines = text.split(/\r?\n/)
+    for (let i = 0; i < lines.length; i++) {
+      if (!lines[i].toLowerCase().includes(needle)) continue
+      results.push({
+        path,
+        name: basename(path),
+        line: i + 1,
+        preview: lines[i].trim().slice(0, MAX_PREVIEW_LENGTH)
+      })
+      if (results.length >= MAX_CONTENT_RESULTS) break
+    }
+  }
+  return results
+}
 
 /** Recursively collect markdown files under `root` whose name matches `query`. */
 async function searchMarkdown(root: string, query: string): Promise<FileNode[]> {
@@ -130,6 +181,35 @@ export function registerFileHandlers(
     }
     return searchMarkdown(root, query)
   })
+
+  ipcMain.handle(IpcChannel.SearchContent, async (_e, root: string, query: string) => {
+    if (typeof root !== 'string' || typeof query !== 'string' || query.trim().length < 2) {
+      return []
+    }
+    return searchContent(root, query.trim())
+  })
+
+  // Save a pasted/uploaded image next to the document (assets/) and return the
+  // relative path for the markdown link. Falls back to null when the document
+  // has no path yet (caller keeps base64 in that case).
+  ipcMain.handle(
+    IpcChannel.ImageSave,
+    async (_e, docPath: string | null, fileName: string, data: ArrayBuffer): Promise<string | null> => {
+      if (typeof docPath !== 'string' || docPath.length === 0) return null
+      if (typeof fileName !== 'string' || !(data instanceof ArrayBuffer)) return null
+      try {
+        const assetsDir = join(dirname(docPath), 'assets')
+        await fs.mkdir(assetsDir, { recursive: true })
+        const safeName = fileName.replace(/[^\w.-]/g, '_') || 'image.png'
+        const unique = `${Date.now()}-${safeName}`
+        await fs.writeFile(join(assetsDir, unique), Buffer.from(data))
+        return `assets/${unique}`
+      } catch (error) {
+        console.error('Failed to save pasted image:', error)
+        return null
+      }
+    }
+  )
 
   ipcMain.handle(IpcChannel.ReadDir, async (_e, dirPath: string) => {
     try {

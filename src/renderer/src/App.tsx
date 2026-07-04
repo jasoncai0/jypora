@@ -74,8 +74,11 @@ export function App(): JSX.Element {
   }, [activeTheme])
 
   useEffect(() => {
-    const mark = isDirty(state.doc) ? '• ' : ''
+    const dirty = isDirty(state.doc)
+    const mark = dirty ? '• ' : ''
     document.title = `${mark}${documentTitle(state.doc)} — jypora`
+    // Keep the main process informed so it can guard window close.
+    window.jypora.setDirty(dirty)
   }, [state.doc])
 
   const doSave = useCallback(async () => {
@@ -234,6 +237,7 @@ export function App(): JSX.Element {
           <Editor
             key={state.doc.filePath ?? 'untitled'}
             value={state.doc.content}
+            docPath={state.doc.filePath}
             sourceMode={state.sourceMode}
             typewriterMode={state.typewriterMode}
             onChange={(content) => dispatch({ type: 'edit', content })}

@@ -17,6 +17,14 @@ export interface OpenFileResult {
   readonly content: string
 }
 
+/** One line-level hit from cross-file content search. */
+export interface ContentMatch {
+  readonly path: string
+  readonly name: string
+  readonly line: number
+  readonly preview: string
+}
+
 export type ThemeName = 'light' | 'dark'
 
 export interface AppSettings {

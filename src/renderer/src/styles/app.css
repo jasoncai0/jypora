@@ -327,6 +327,25 @@ body,
   color: var(--muted);
 }
 
+/* Cross-file content search hits */
+.content-hit {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.hit-name {
+  flex-shrink: 0;
+}
+
+.hit-preview {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Embedded terminal */
 .jypora-terminal {
   height: var(--terminal-h, 240px);

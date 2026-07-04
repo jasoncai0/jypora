@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { IpcChannel, MenuActionType } from '../shared/ipc'
-import { AppSettings, FileNode, OpenFileResult } from '../shared/types'
+import { AppSettings, ContentMatch, FileNode, OpenFileResult } from '../shared/types'
 import { ThemeDefinition } from '../shared/themes'
 
 interface TerminalStartResult {
@@ -25,6 +25,19 @@ const api = {
   readDir: (path: string): Promise<FileNode[]> => ipcRenderer.invoke(IpcChannel.ReadDir, path),
   searchWorkspace: (root: string, query: string): Promise<FileNode[]> =>
     ipcRenderer.invoke(IpcChannel.SearchWorkspace, root, query),
+  searchContent: (root: string, query: string): Promise<ContentMatch[]> =>
+    ipcRenderer.invoke(IpcChannel.SearchContent, root, query),
+  saveImage: (docPath: string | null, fileName: string, data: ArrayBuffer): Promise<string | null> =>
+    ipcRenderer.invoke(IpcChannel.ImageSave, docPath, fileName, data),
+  setDirty: (dirty: boolean): void => ipcRenderer.send(IpcChannel.SetDirty, dirty),
+  findStart: (text: string, forward: boolean, first: boolean): void =>
+    ipcRenderer.send(IpcChannel.FindStart, text, forward, first),
+  findStop: (keepSelection: boolean): void => ipcRenderer.send(IpcChannel.FindStop, keepSelection),
+  onFindResult: (handler: (r: { activeMatchOrdinal: number; matches: number }) => void): (() => void) => {
+    const listener = (_e: unknown, r: { activeMatchOrdinal: number; matches: number }): void => handler(r)
+    ipcRenderer.on(IpcChannel.FindResult, listener)
+    return () => ipcRenderer.removeListener(IpcChannel.FindResult, listener)
+  },
   exportHtml: (payload: unknown): Promise<boolean> => ipcRenderer.invoke(IpcChannel.ExportHtml, payload),
   exportPdf: (payload: unknown): Promise<boolean> => ipcRenderer.invoke(IpcChannel.ExportPdf, payload),
   exportDocx: (payload: unknown): Promise<boolean> => ipcRenderer.invoke(IpcChannel.ExportDocx, payload),

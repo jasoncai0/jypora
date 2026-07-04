@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { FileNode } from '../../../shared/types'
+import { ContentMatch, FileNode } from '../../../shared/types'
 import { iconFor } from '../../../shared/file-icons'
 import { workspaceLabel } from '../../../shared/recent'
 
@@ -72,7 +72,7 @@ function DirChildren({ path, activePath, onOpenFile, depth }: TreeProps): JSX.El
   )
 }
 
-/** Search results view — flat list of matching markdown files across the tree. */
+/** Search results — file-name matches plus cross-file content hits. */
 function SearchResults({
   root,
   query,
@@ -85,6 +85,7 @@ function SearchResults({
   onOpenFile: (path: string) => void
 }): JSX.Element {
   const [results, setResults] = useState<FileNode[]>([])
+  const [contentHits, setContentHits] = useState<ContentMatch[]>([])
 
   useEffect(() => {
     let active = true
@@ -92,14 +93,21 @@ function SearchResults({
       .searchWorkspace(root, query)
       .then((r) => active && setResults(r))
       .catch((error) => console.error('Search failed:', error))
+    window.jypora
+      .searchContent(root, query)
+      .then((r) => active && setContentHits(r))
+      .catch((error) => console.error('Content search failed:', error))
     return () => {
       active = false
     }
   }, [root, query])
 
-  if (results.length === 0) return <div className="sidebar-empty">No matches</div>
+  if (results.length === 0 && contentHits.length === 0) {
+    return <div className="sidebar-empty">No matches</div>
+  }
   return (
     <>
+      {results.length > 0 && <div className="recents-title">Files</div>}
       {results.map((node) => (
         <div
           key={node.path}
@@ -110,6 +118,20 @@ function SearchResults({
         >
           <span className="file-icon">{iconFor(node.name, false)}</span>
           {node.name}
+        </div>
+      ))}
+      {contentHits.length > 0 && <div className="recents-title">Content</div>}
+      {contentHits.map((hit) => (
+        <div
+          key={`${hit.path}:${hit.line}`}
+          className={`tree-row file content-hit ${activePath === hit.path ? 'active' : ''}`}
+          style={{ paddingLeft: '8px' }}
+          onClick={() => onOpenFile(hit.path)}
+          title={`${hit.path}:${hit.line}`}
+        >
+          <span className="file-icon">{iconFor(hit.name, false)}</span>
+          <span className="hit-name">{hit.name}</span>
+          <span className="hit-preview">{hit.preview}</span>
         </div>
       ))}
     </>
