@@ -1,7 +1,7 @@
 {
   "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"cd /Users/mac/workspace/jypora; f=$(find node_modules/.pnpm -path \\\"*@milkdown+utils*\\\" -name \\\"callCommand.d.ts\\\" 2>/dev/null | head -1); echo \\\"FILE: $f\\\"; cat \\\"$f\\\"; echo \\\"=== wrapInH...",
-  "error": "Exit code 2\nFILE: \ncat: : No such file or directory\n=== wrapInHeading def ===\n-- node_modules/.pnpm/@milkdown+preset-commonmark@7.21.2/node_modules/@milkdown/preset-commonmark/lib/plugin/sync-heading-id-plugin.d.ts\nnode_modules/.pnpm/@milkdown+preset-commonmark@7.21.2/node_modules/@milkdown/preset-commonmark/lib/node/heading.d.ts\nugrep: warning: node_modules/.pnpm/@milkdown+preset-commonmark@7.21.2/node_modules/@milkdown/preset-commonmark/lib/plugin/sync-heading-id-plugin.d.ts\nnode_modules/.pnpm...",
-  "timestamp": "2026-07-04T12:41:27.450Z",
+  "tool_input_preview": "{\"command\":\"gh run list --workflow=release.yml --limit 1 2>&1 | head -2; echo \\\"--- assets ---\\\"; gh release view v0.2.0 --json assets --jq '[.assets[]|{name,size}]' 2>&1\",\"description\":\"Check v0.2.0 ...",
+  "error": "Exit code 1\nqueued\t\tci: build release DMGs on macos-13 to avoid flaky APFS hdiutil on arm…\tRelease\tv0.2.0\tpush\t28708404955\t6m3s\t2026-07-04T13:55:21Z\n--- assets ---\nrelease not found",
+  "timestamp": "2026-07-04T14:01:27.616Z",
   "retry_count": 1
 }
