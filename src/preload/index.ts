@@ -39,6 +39,8 @@ const api = {
   terminalResize: (cols: number, rows: number): void =>
     ipcRenderer.send(IpcChannel.TerminalResize, cols, rows),
   terminalKill: (): void => ipcRenderer.send(IpcChannel.TerminalKill),
+  terminalOpenExternal: (docPath: string | null): Promise<{ ok: boolean; app?: string; error?: string }> =>
+    ipcRenderer.invoke(IpcChannel.TerminalOpenExternal, docPath),
   onTerminalData: (handler: (data: string) => void): (() => void) => {
     const listener = (_e: unknown, data: string): void => handler(data)
     ipcRenderer.on(IpcChannel.TerminalData, listener)

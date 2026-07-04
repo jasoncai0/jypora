@@ -130,6 +130,7 @@ export function buildMenu(getWindow: () => BrowserWindow | null, options: MenuOp
         { label: 'Toggle Sidebar', accelerator: 'CmdOrCtrl+Shift+L', click: () => send(win(), 'toggle-sidebar') },
         { label: 'Toggle Outline', accelerator: 'CmdOrCtrl+Shift+O', click: () => send(win(), 'toggle-outline') },
         { label: 'Toggle Terminal', accelerator: 'CmdOrCtrl+`', click: () => send(win(), 'toggle-terminal') },
+        { label: 'Open in iTerm2', accelerator: 'CmdOrCtrl+Shift+`', click: () => send(win(), 'open-iterm') },
         { type: 'separator' },
         { label: 'Focus Mode', accelerator: 'CmdOrCtrl+Shift+F', click: () => send(win(), 'toggle-focus') },
         { label: 'Typewriter Mode', click: () => send(win(), 'toggle-typewriter') },

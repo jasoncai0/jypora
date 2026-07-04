@@ -22,6 +22,7 @@ export const IpcChannel = {
   TerminalInput: 'terminal:input',
   TerminalResize: 'terminal:resize',
   TerminalKill: 'terminal:kill',
+  TerminalOpenExternal: 'terminal:open-external',
   TerminalData: 'terminal:data',
   TerminalExit: 'terminal:exit',
   // main -> renderer
@@ -42,6 +43,7 @@ export type MenuActionType =
   | 'toggle-sidebar'
   | 'toggle-outline'
   | 'toggle-terminal'
+  | 'open-iterm'
   | 'toggle-focus'
   | 'toggle-typewriter'
   | 'find'

@@ -114,6 +114,10 @@ export function App(): JSX.Element {
         case 'toggle-sidebar': return dispatch({ type: 'toggle-sidebar' })
         case 'toggle-outline': return dispatch({ type: 'toggle-outline' })
         case 'toggle-terminal': return dispatch({ type: 'toggle-terminal' })
+        case 'open-iterm':
+          return void window.jypora
+            .terminalOpenExternal(doc.filePath)
+            .catch((error) => console.error('Failed to open external terminal:', error))
         case 'toggle-focus': return dispatch({ type: 'toggle-focus' })
         case 'toggle-typewriter': return dispatch({ type: 'toggle-typewriter' })
         case 'find': return dispatch({ type: 'set-find', visible: true })

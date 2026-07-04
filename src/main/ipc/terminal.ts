@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { homedir } from 'node:os'
+import { spawn } from 'node:child_process'
 import { ipcMain, BrowserWindow } from 'electron'
 import { IpcChannel } from '../../shared/ipc'
 
@@ -76,5 +77,26 @@ export function registerTerminalHandlers(getWindow: () => BrowserWindow | null):
   ipcMain.on(IpcChannel.TerminalKill, () => {
     pty?.kill()
     pty = null
+  })
+
+  // "Open in iTerm2": macOS cannot embed another app's window, so the best
+  // integration is launching iTerm2 (falling back to Terminal.app) at the
+  // current document's directory. `open -a iTerm <dir>` opens a session
+  // cd'ed into that folder.
+  ipcMain.handle(IpcChannel.TerminalOpenExternal, (_e, docPath: string | null) => {
+    if (process.platform !== 'darwin') return { ok: false, error: 'macOS only' }
+    const cwd = resolveCwd(typeof docPath === 'string' ? docPath : null)
+    return new Promise((resolve) => {
+      const proc = spawn('open', ['-a', 'iTerm', cwd])
+      proc.on('close', (code) => {
+        if (code === 0) return resolve({ ok: true, app: 'iTerm2' })
+        const fallback = spawn('open', ['-a', 'Terminal', cwd])
+        fallback.on('close', (fbCode) =>
+          resolve(fbCode === 0 ? { ok: true, app: 'Terminal' } : { ok: false, error: 'No terminal app found' })
+        )
+        fallback.on('error', () => resolve({ ok: false, error: 'No terminal app found' }))
+      })
+      proc.on('error', () => resolve({ ok: false, error: 'open command failed' }))
+    })
   })
 }
