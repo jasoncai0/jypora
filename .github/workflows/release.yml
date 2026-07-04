@@ -10,7 +10,9 @@ permissions:
 
 jobs:
   build-mac:
-    runs-on: macos-latest
+    # macos-13 (Intel) creates DMGs via HFS+; APFS dmg creation on arm64
+    # hosted runners is flaky (hdiutil detach races).
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
