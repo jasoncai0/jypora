@@ -6,26 +6,44 @@ import { workspaceLabel } from '../shared/recent'
 interface MenuOptions {
   readonly themes: readonly ThemeDefinition[]
   readonly recentWorkspaces: readonly string[]
+  readonly recentFiles: readonly string[]
   readonly activeThemeId: string
+  readonly autoSave: boolean
 }
 
 function send(win: BrowserWindow | null, action: MenuActionType): void {
   win?.webContents.send(IpcChannel.MenuAction, action)
 }
 
-/** File > Open Recent submenu built from the persisted workspace list. */
+/** File > Open Recent submenu: recent documents first, then workspaces. */
 function recentSubmenu(
   win: () => BrowserWindow | null,
-  recents: readonly string[]
+  workspaces: readonly string[],
+  files: readonly string[]
 ): MenuItemConstructorOptions {
-  const items: MenuItemConstructorOptions[] =
-    recents.length === 0
-      ? [{ label: 'No Recent Workspaces', enabled: false }]
-      : recents.map((path) => ({
-          label: workspaceLabel(path),
-          sublabel: path,
-          click: () => win()?.webContents.send(IpcChannel.OpenRecent, path)
-        }))
+  const items: MenuItemConstructorOptions[] = []
+  if (files.length > 0) {
+    items.push({ label: 'Files', enabled: false })
+    for (const path of files) {
+      items.push({
+        label: workspaceLabel(path),
+        sublabel: path,
+        click: () => win()?.webContents.send(IpcChannel.OpenRecentFile, path)
+      })
+    }
+  }
+  if (workspaces.length > 0) {
+    if (items.length > 0) items.push({ type: 'separator' })
+    items.push({ label: 'Workspaces', enabled: false })
+    for (const path of workspaces) {
+      items.push({
+        label: workspaceLabel(path),
+        sublabel: path,
+        click: () => win()?.webContents.send(IpcChannel.OpenRecent, path)
+      })
+    }
+  }
+  if (items.length === 0) items.push({ label: 'No Recent Items', enabled: false })
   return { label: 'Open Recent', submenu: items }
 }
 
@@ -73,10 +91,11 @@ export function buildMenu(getWindow: () => BrowserWindow | null, options: MenuOp
         { label: 'New Document', accelerator: 'CmdOrCtrl+T', visible: false, acceleratorWorksWhenHidden: true, click: () => send(win(), 'new') },
         { label: 'Open…', accelerator: 'CmdOrCtrl+O', click: () => send(win(), 'open') },
         { label: 'Open Folder…', accelerator: 'CmdOrCtrl+Shift+K', click: () => send(win(), 'open-folder') },
-        recentSubmenu(win, options.recentWorkspaces),
+        recentSubmenu(win, options.recentWorkspaces, options.recentFiles),
         { type: 'separator' },
         { label: 'Save', accelerator: 'CmdOrCtrl+S', click: () => send(win(), 'save') },
         { label: 'Save As…', accelerator: 'CmdOrCtrl+Shift+S', click: () => send(win(), 'save-as') },
+        { label: 'Auto Save', type: 'checkbox', checked: options.autoSave, click: () => send(win(), 'toggle-autosave') },
         { type: 'separator' },
         {
           label: 'Export',
@@ -101,7 +120,10 @@ export function buildMenu(getWindow: () => BrowserWindow | null, options: MenuOp
         { role: 'paste' },
         { type: 'separator' },
         { label: 'Find & Replace…', accelerator: 'CmdOrCtrl+F', click: () => send(win(), 'find') },
-        { label: 'Search Files…', accelerator: 'CmdOrCtrl+P', click: () => send(win(), 'search-files') }
+        { label: 'Search Files…', accelerator: 'CmdOrCtrl+P', click: () => send(win(), 'search-files') },
+        { type: 'separator' },
+        { label: 'Copy as Markdown', click: () => send(win(), 'copy-markdown') },
+        { label: 'Copy as HTML', click: () => send(win(), 'copy-html') }
       ]
     },
     {

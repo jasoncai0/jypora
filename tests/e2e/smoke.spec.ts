@@ -115,17 +115,39 @@ test('outline click and anchor links scroll to headings', async () => {
     .toBe(true)
 })
 
+test('Copy as Markdown puts the document source on the clipboard', async () => {
+  // Set known content deterministically via source mode.
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'toggle-source')
+  })
+  const textarea = page.locator('.jypora-source')
+  await textarea.waitFor()
+  await textarea.fill('copy-me test content')
+  await app.evaluate(({ clipboard }) => clipboard.writeText(''))
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'copy-markdown')
+  })
+  await expect
+    .poll(() => app.evaluate(({ clipboard }) => clipboard.readText()))
+    .toContain('copy-me test content')
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'toggle-source')
+  })
+})
+
 test('sidebar can be resized by dragging its handle', async () => {
   const sidebar = page.locator('.jypora-sidebar')
   const handle = page.getByTestId('sidebar-handle')
   const before = (await sidebar.boundingBox())!.width
   const box = (await handle.boundingBox())!
+  // Persisted sizes survive runs — drag toward whichever bound has room.
+  const delta = before > 320 ? -120 : 120
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
   await page.mouse.down()
-  await page.mouse.move(box.x + 120, box.y + box.height / 2, { steps: 5 })
+  await page.mouse.move(box.x + delta, box.y + box.height / 2, { steps: 5 })
   await page.mouse.up()
   const after = (await sidebar.boundingBox())!.width
-  expect(after).toBeGreaterThan(before + 60)
+  expect(Math.abs(after - before)).toBeGreaterThan(60)
 })
 
 test('terminal panel can be resized by dragging its handle', async () => {
@@ -137,12 +159,14 @@ test('terminal panel can be resized by dragging its handle', async () => {
   const before = (await terminal.boundingBox())!.height
   const handle = page.getByTestId('terminal-handle')
   const box = (await handle.boundingBox())!
+  // Persisted sizes survive runs — drag toward whichever bound has room.
+  const delta = before > 360 ? 100 : -100
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
   await page.mouse.down()
-  await page.mouse.move(box.x + box.width / 2, box.y - 100, { steps: 5 })
+  await page.mouse.move(box.x + box.width / 2, box.y + delta, { steps: 5 })
   await page.mouse.up()
   const after = (await terminal.boundingBox())!.height
-  expect(after).toBeGreaterThan(before + 50)
+  expect(Math.abs(after - before)).toBeGreaterThan(50)
   // Hide the terminal again so later tests keep a stable layout.
   await app.evaluate(({ BrowserWindow }) => {
     BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'toggle-terminal')

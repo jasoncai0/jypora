@@ -32,6 +32,7 @@ const api = {
   setSetting: (key: keyof AppSettings, value: unknown): Promise<AppSettings> =>
     ipcRenderer.invoke(IpcChannel.SetSetting, key, value),
   getThemes: (): Promise<ThemeDefinition[]> => ipcRenderer.invoke(IpcChannel.GetThemes),
+  copyText: (text: string): Promise<boolean> => ipcRenderer.invoke(IpcChannel.CopyText, text),
   // Embedded terminal
   terminalStart: (docPath: string | null, cols: number, rows: number): Promise<TerminalStartResult> =>
     ipcRenderer.invoke(IpcChannel.TerminalStart, docPath, cols, rows),
@@ -60,6 +61,11 @@ const api = {
     const listener = (_e: unknown, path: string): void => handler(path)
     ipcRenderer.on(IpcChannel.OpenRecent, listener)
     return () => ipcRenderer.removeListener(IpcChannel.OpenRecent, listener)
+  },
+  onOpenRecentFile: (handler: (path: string) => void): (() => void) => {
+    const listener = (_e: unknown, path: string): void => handler(path)
+    ipcRenderer.on(IpcChannel.OpenRecentFile, listener)
+    return () => ipcRenderer.removeListener(IpcChannel.OpenRecentFile, listener)
   }
 }
 

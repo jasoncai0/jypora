@@ -25,3 +25,9 @@ export function pushRecentWorkspace(path: string): AppSettings {
   const next = addRecent(getSettings().recentWorkspaces, path)
   return setSetting('recentWorkspaces', next)
 }
+
+/** Record a document as most-recently-used and return the updated settings. */
+export function pushRecentFile(path: string): AppSettings {
+  const next = addRecent(getSettings().recentFiles, path)
+  return setSetting('recentFiles', next)
+}

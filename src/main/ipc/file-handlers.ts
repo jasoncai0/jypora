@@ -5,7 +5,7 @@ import { IpcChannel } from '../../shared/ipc'
 import { buildFileNodes, isMarkdownFile, shouldIgnore } from '../../shared/filetree'
 import { fuzzyMatch, rankMatches } from '../../shared/search'
 import { FileNode, OpenFileResult } from '../../shared/types'
-import { pushRecentWorkspace } from '../settings'
+import { pushRecentFile, pushRecentWorkspace } from '../settings'
 
 const MAX_SEARCH_RESULTS = 200
 const MAX_SEARCH_DEPTH = 6
@@ -52,7 +52,15 @@ async function readFileSafe(filePath: string): Promise<OpenFileResult> {
 }
 
 /** Register all filesystem-related IPC handlers. */
-export function registerFileHandlers(getWindow: () => BrowserWindow | null): void {
+export function registerFileHandlers(
+  getWindow: () => BrowserWindow | null,
+  onRecentsChanged?: () => void
+): void {
+  const recordFile = (path: string): void => {
+    pushRecentFile(path)
+    onRecentsChanged?.()
+  }
+
   ipcMain.handle(IpcChannel.FileOpen, async (): Promise<OpenFileResult | null> => {
     const win = getWindow()
     if (!win) return null
@@ -61,14 +69,18 @@ export function registerFileHandlers(getWindow: () => BrowserWindow | null): voi
       filters: MARKDOWN_FILTERS
     })
     if (result.canceled || result.filePaths.length === 0) return null
-    return readFileSafe(result.filePaths[0])
+    const opened = await readFileSafe(result.filePaths[0])
+    recordFile(opened.filePath)
+    return opened
   })
 
   ipcMain.handle(
     IpcChannel.FileOpenPath,
     async (_e, filePath: string): Promise<OpenFileResult | null> => {
       if (typeof filePath !== 'string' || !isMarkdownFile(filePath)) return null
-      return readFileSafe(filePath)
+      const opened = await readFileSafe(filePath)
+      recordFile(opened.filePath)
+      return opened
     }
   )
 
@@ -97,6 +109,7 @@ export function registerFileHandlers(getWindow: () => BrowserWindow | null): voi
       })
       if (result.canceled || !result.filePath) return null
       await fs.writeFile(result.filePath, content ?? '', 'utf-8')
+      recordFile(result.filePath)
       return result.filePath
     }
   )
@@ -107,6 +120,7 @@ export function registerFileHandlers(getWindow: () => BrowserWindow | null): voi
     const result = await dialog.showOpenDialog(win, { properties: ['openDirectory'] })
     if (result.canceled || result.filePaths.length === 0) return null
     pushRecentWorkspace(result.filePaths[0])
+    onRecentsChanged?.()
     return result.filePaths[0]
   })
 

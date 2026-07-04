@@ -17,6 +17,7 @@ export const IpcChannel = {
   GetSettings: 'settings:get',
   SetSetting: 'settings:set',
   GetThemes: 'themes:get',
+  CopyText: 'clipboard:copy-text',
   // terminal (embedded agent/terminal panel)
   TerminalStart: 'terminal:start',
   TerminalInput: 'terminal:input',
@@ -27,7 +28,8 @@ export const IpcChannel = {
   TerminalExit: 'terminal:exit',
   // main -> renderer
   MenuAction: 'menu:action',
-  OpenRecent: 'menu:open-recent'
+  OpenRecent: 'menu:open-recent',
+  OpenRecentFile: 'menu:open-recent-file'
 } as const
 
 export type IpcChannelName = (typeof IpcChannel)[keyof typeof IpcChannel]
@@ -48,6 +50,9 @@ export type MenuActionType =
   | 'toggle-typewriter'
   | 'find'
   | 'search-files'
+  | 'toggle-autosave'
+  | 'copy-markdown'
+  | 'copy-html'
   | 'export-html'
   | 'export-pdf'
   | 'export-docx'

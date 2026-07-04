@@ -30,6 +30,10 @@ export function App(): JSX.Element {
   const stateRef = useRef(state)
   stateRef.current = state
 
+  // Auto-save configuration mirrored from persisted settings.
+  const [autoSave, setAutoSave] = useState(false)
+  const [autoSaveDelayMs, setAutoSaveDelayMs] = useState(1500)
+
   // Drag-to-resize panel sizes (persisted per panel in localStorage).
   const sidebarPanel = usePanelSize('sidebar', { initial: 240, min: 160, max: 480, axis: 'x', sign: 1 })
   const outlinePanel = usePanelSize('outline', { initial: 220, min: 160, max: 440, axis: 'x', sign: -1 })
@@ -42,10 +46,26 @@ export function App(): JSX.Element {
       .getSettings()
       .then((s) => {
         setRecentWorkspaces(s.recentWorkspaces)
+        setAutoSave(s.autoSave)
+        setAutoSaveDelayMs(s.autoSaveDelayMs)
         if (s.themeId !== stateRef.current.themeId) dispatch({ type: 'set-theme', themeId: s.themeId })
       })
       .catch(() => undefined)
   }, [])
+
+  // Auto-save: debounce writes while the document is dirty and has a path.
+  useEffect(() => {
+    if (!autoSave || !state.doc.filePath || !isDirty(state.doc)) return
+    const timer = setTimeout(() => {
+      const { doc } = stateRef.current
+      if (!doc.filePath || !isDirty(doc)) return
+      window.jypora
+        .saveFile(doc.filePath, doc.content)
+        .then((ok) => ok && dispatch({ type: 'saved' }))
+        .catch((error) => console.error('Auto-save failed:', error))
+    }, autoSaveDelayMs)
+    return () => clearTimeout(timer)
+  }, [autoSave, autoSaveDelayMs, state.doc])
 
   const activeTheme = useMemo(() => findTheme(themes, state.themeId), [themes, state.themeId])
 
@@ -128,6 +148,20 @@ export function App(): JSX.Element {
         case 'toggle-focus': return dispatch({ type: 'toggle-focus' })
         case 'toggle-typewriter': return dispatch({ type: 'toggle-typewriter' })
         case 'find': return dispatch({ type: 'set-find', visible: true })
+        case 'toggle-autosave':
+          return setAutoSave((prev) => {
+            const next = !prev
+            window.jypora.setSetting('autoSave', next).catch(() => undefined)
+            return next
+          })
+        case 'copy-markdown':
+          return void window.jypora
+            .copyText(doc.content)
+            .catch((error) => console.error('Copy as Markdown failed:', error))
+        case 'copy-html':
+          return void window.jypora
+            .copyText(renderedHtml())
+            .catch((error) => console.error('Copy as HTML failed:', error))
         case 'search-files':
           if (!stateRef.current.sidebarVisible) dispatch({ type: 'toggle-sidebar' })
           return setSearchFocusToken((n) => n + 1)
@@ -144,8 +178,9 @@ export function App(): JSX.Element {
 
   useMenuActions(menuHandler)
 
-  // Recent-workspace clicks from the native File > Open Recent menu.
+  // Recent-workspace / recent-file clicks from the native File > Open Recent menu.
   useEffect(() => window.jypora.onOpenRecent((path) => dispatch({ type: 'set-workspace', root: path })), [])
+  useEffect(() => window.jypora.onOpenRecentFile((path) => void openPath(path)), [openPath])
 
   // In-document anchor links (e.g. a hand-written TOC) scroll instead of navigating.
   useEffect(() => installAnchorInterceptor(), [])

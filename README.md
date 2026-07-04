@@ -27,6 +27,8 @@ WYSIWYG editing core.
 - 🎨 **Theme system** — built-in Light, Dark, Sepia, Nord, Solarized, Dracula;
   follows OS appearance; **pluggable custom themes** via JSON drop-in.
 - 🔎 **Find & replace** (`Cmd/Ctrl+F`).
+- 💾 **Auto save** (File ▸ Auto Save) and **recent files/workspaces** (File ▸ Open Recent).
+- 📋 **Copy as Markdown / HTML** (Edit menu).
 - 📤 **Export** to HTML, PDF (built-in, Mermaid-aware), and Word `.docx` (via `pandoc`).
 - 🍎 **Native macOS app** packaged as a `.dmg`.
 

@@ -28,6 +28,7 @@ export interface AppSettings {
   readonly outlineVisible: boolean
   readonly terminalVisible: boolean
   readonly recentWorkspaces: readonly string[]
+  readonly recentFiles: readonly string[]
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -38,7 +39,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   sidebarVisible: true,
   outlineVisible: false,
   terminalVisible: false,
-  recentWorkspaces: []
+  recentWorkspaces: [],
+  recentFiles: []
 }
 
 /** True when the document has unsaved edits. */
