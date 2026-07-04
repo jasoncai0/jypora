@@ -35,6 +35,7 @@ export interface AppSettings {
   readonly sidebarVisible: boolean
   readonly outlineVisible: boolean
   readonly terminalVisible: boolean
+  readonly spellCheck: boolean
   readonly recentWorkspaces: readonly string[]
   readonly recentFiles: readonly string[]
 }
@@ -47,6 +48,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   sidebarVisible: true,
   outlineVisible: false,
   terminalVisible: false,
+  spellCheck: true,
   recentWorkspaces: [],
   recentFiles: []
 }

@@ -1,42 +1,104 @@
 import { describe, expect, test } from 'vitest'
-import { reducer, initialState, AppState } from '../../src/renderer/src/state/appState'
+import {
+  reducer,
+  initialState,
+  activeTab,
+  anyDirty,
+  AppState,
+  Action
+} from '../../src/renderer/src/state/appState'
 import { isDirty } from '../../src/shared/types'
 
-describe('appState reducer', () => {
-  test('edit updates document content', () => {
-    const next = reducer(initialState, { type: 'edit', content: 'hi' })
-    expect(next.doc.content).toBe('hi')
-    expect(isDirty(next.doc)).toBe(true)
+function run(...actions: Action[]): AppState {
+  return actions.reduce(reducer, initialState)
+}
+
+describe('tabs', () => {
+  test('starts with a single untitled tab', () => {
+    expect(initialState.tabs).toHaveLength(1)
+    expect(activeTab(initialState).doc.filePath).toBeNull()
   })
 
-  test('open sets a clean document', () => {
-    const next = reducer(initialState, { type: 'open', filePath: '/a.md', content: 'x' })
-    expect(next.doc.filePath).toBe('/a.md')
-    expect(isDirty(next.doc)).toBe(false)
+  test('edit updates only the active tab', () => {
+    const s = run({ type: 'edit', content: 'hi' })
+    expect(activeTab(s).doc.content).toBe('hi')
+    expect(isDirty(activeTab(s).doc)).toBe(true)
   })
 
-  test('new resets the document', () => {
-    const dirty = reducer(initialState, { type: 'edit', content: 'x' })
-    const next = reducer(dirty, { type: 'new' })
-    expect(next.doc.content).toBe('')
+  test('open reuses a pristine untitled tab', () => {
+    const s = run({ type: 'open', filePath: '/a.md', content: 'x' })
+    expect(s.tabs).toHaveLength(1)
+    expect(activeTab(s).doc.filePath).toBe('/a.md')
   })
 
-  test('saved clears the dirty flag', () => {
-    const dirty = reducer(reducer(initialState, { type: 'open', filePath: '/a.md', content: 'x' }), {
-      type: 'edit',
-      content: 'y'
-    })
-    const next = reducer(dirty, { type: 'saved' })
-    expect(isDirty(next.doc)).toBe(false)
+  test('open creates a new tab when the active one has content', () => {
+    const s = run({ type: 'edit', content: 'draft' }, { type: 'open', filePath: '/a.md', content: 'x' })
+    expect(s.tabs).toHaveLength(2)
+    expect(activeTab(s).doc.filePath).toBe('/a.md')
   })
 
+  test('open activates an existing tab for the same file', () => {
+    const s = run(
+      { type: 'open', filePath: '/a.md', content: 'x' },
+      { type: 'new' },
+      { type: 'open', filePath: '/a.md', content: 'x' }
+    )
+    expect(s.tabs).toHaveLength(2)
+    expect(activeTab(s).doc.filePath).toBe('/a.md')
+  })
+
+  test('new adds and activates a fresh tab', () => {
+    const s = run({ type: 'edit', content: 'a' }, { type: 'new' })
+    expect(s.tabs).toHaveLength(2)
+    expect(activeTab(s).doc.content).toBe('')
+  })
+
+  test('close-tab removes the active tab and activates a neighbor', () => {
+    const s = run(
+      { type: 'open', filePath: '/a.md', content: 'x' },
+      { type: 'new' },
+      { type: 'close-tab' }
+    )
+    expect(s.tabs).toHaveLength(1)
+    expect(activeTab(s).doc.filePath).toBe('/a.md')
+  })
+
+  test('closing the last tab leaves a fresh untitled tab', () => {
+    const s = run({ type: 'edit', content: 'x' }, { type: 'close-tab' })
+    expect(s.tabs).toHaveLength(1)
+    expect(activeTab(s).doc.content).toBe('')
+  })
+
+  test('activate-tab and cycle-tab switch focus', () => {
+    const s = run({ type: 'open', filePath: '/a.md', content: 'x' }, { type: 'new' })
+    const firstId = s.tabs[0].id
+    expect(activeTab(reducer(s, { type: 'activate-tab', id: firstId })).id).toBe(firstId)
+    expect(activeTab(reducer(s, { type: 'cycle-tab', delta: 1 })).id).toBe(firstId)
+  })
+
+  test('anyDirty reflects unsaved changes in any tab', () => {
+    const s = run({ type: 'edit', content: 'x' }, { type: 'new' })
+    expect(isDirty(activeTab(s).doc)).toBe(false)
+    expect(anyDirty(s)).toBe(true)
+  })
+
+  test('saved clears the active tab dirty flag', () => {
+    const s = run(
+      { type: 'open', filePath: '/a.md', content: 'x' },
+      { type: 'edit', content: 'y' },
+      { type: 'saved' }
+    )
+    expect(isDirty(activeTab(s).doc)).toBe(false)
+  })
+})
+
+describe('ui state', () => {
   test('set-workspace stores the root', () => {
-    const next = reducer(initialState, { type: 'set-workspace', root: '/w' })
-    expect(next.workspaceRoot).toBe('/w')
+    expect(run({ type: 'set-workspace', root: '/w' }).workspaceRoot).toBe('/w')
   })
 
   test('set-theme changes themeId', () => {
-    expect(reducer(initialState, { type: 'set-theme', themeId: 'dracula' }).themeId).toBe('dracula')
+    expect(run({ type: 'set-theme', themeId: 'dracula' }).themeId).toBe('dracula')
   })
 
   test.each([
@@ -48,12 +110,11 @@ describe('appState reducer', () => {
     ['toggle-typewriter', 'typewriterMode']
   ] as const)('%s flips %s', (type, key) => {
     const before = initialState[key as keyof AppState] as boolean
-    const next = reducer(initialState, { type })
-    expect(next[key as keyof AppState]).toBe(!before)
+    expect(run({ type })[key as keyof AppState]).toBe(!before)
   })
 
   test('set-find toggles find visibility', () => {
-    expect(reducer(initialState, { type: 'set-find', visible: true }).findVisible).toBe(true)
+    expect(run({ type: 'set-find', visible: true }).findVisible).toBe(true)
   })
 
   test('does not mutate the input state', () => {

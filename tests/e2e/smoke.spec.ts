@@ -12,15 +12,17 @@ let page: Page
 test.beforeAll(async () => {
   app = await electron.launch({ args: [resolve(__dirname, '../../out/main/index.js')] })
   page = await app.firstWindow()
+  // Auto-accept renderer confirm() dialogs (e.g. closing a dirty tab).
+  page.on('dialog', (dialog) => void dialog.accept())
   await page.waitForSelector('.jypora-app')
 })
 
 test.afterAll(async () => {
-  // Reset the document so the unsaved-changes close guard doesn't block exit.
+  // destroy() skips the 'close' event so the unsaved-changes guard (which
+  // shows a native dialog) can't block test teardown.
   await app.evaluate(({ BrowserWindow }) => {
-    BrowserWindow.getAllWindows()[0]?.webContents.send('menu:action', 'new')
+    for (const win of BrowserWindow.getAllWindows()) win.destroy()
   })
-  await page.waitForTimeout(300)
   await app.close()
 })
 
@@ -138,6 +140,28 @@ test('Copy as Markdown puts the document source on the clipboard', async () => {
   await app.evaluate(({ BrowserWindow }) => {
     BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'toggle-source')
   })
+})
+
+test('multiple tabs: open, switch, and close', async () => {
+  // A second tab makes the tab bar appear.
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'new')
+  })
+  const tabs = page.locator('.jypora-tabbar .tab')
+  await expect(tabs).toHaveCount(2)
+  await expect(page.locator('.jypora-tabbar .tab.active')).toHaveCount(1)
+
+  // Cycle back to the first tab.
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'next-tab')
+  })
+  await expect(tabs.first()).toHaveClass(/active/)
+
+  // Close the current tab — the bar hides at one remaining tab.
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'close-tab')
+  })
+  await expect(page.locator('.jypora-tabbar')).toHaveCount(0)
 })
 
 test('find panel highlights matches and reports n/m', async () => {

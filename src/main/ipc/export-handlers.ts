@@ -8,6 +8,7 @@ interface HtmlPayload {
   readonly title: string
   readonly bodyHtml: string
   readonly theme?: 'light' | 'dark'
+  readonly themeVars?: Readonly<Record<string, string>>
 }
 
 async function chooseSavePath(

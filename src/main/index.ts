@@ -22,17 +22,30 @@ function refreshMenu(): void {
     recentWorkspaces: settings.recentWorkspaces,
     recentFiles: settings.recentFiles,
     activeThemeId: settings.themeId,
-    autoSave: settings.autoSave
+    autoSave: settings.autoSave,
+    spellCheck: settings.spellCheck
   })
+}
+
+/** Apply the persisted spell-check preference to the session. */
+function applySpellCheck(): void {
+  mainWindow?.webContents.session.setSpellCheckerEnabled(getSettings().spellCheck)
 }
 
 function registerSettingsHandlers(): void {
   ipcMain.handle(IpcChannel.GetSettings, () => getSettings())
   ipcMain.handle(IpcChannel.SetSetting, (_e, key: keyof AppSettings, value: unknown) => {
     const next = setSetting(key, value as AppSettings[keyof AppSettings])
-    if (key === 'themeId' || key === 'recentWorkspaces' || key === 'recentFiles' || key === 'autoSave') {
+    if (
+      key === 'themeId' ||
+      key === 'recentWorkspaces' ||
+      key === 'recentFiles' ||
+      key === 'autoSave' ||
+      key === 'spellCheck'
+    ) {
       refreshMenu()
     }
+    if (key === 'spellCheck') applySpellCheck()
     return next
   })
   ipcMain.handle(IpcChannel.GetThemes, () => themes)
@@ -124,6 +137,7 @@ app.whenReady().then(async () => {
   mainWindow = createWindow()
   wireWindow(mainWindow)
   refreshMenu()
+  applySpellCheck()
 
   nativeTheme.on('updated', () => {
     if (!getSettings().followSystemTheme) return

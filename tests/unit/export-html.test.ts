@@ -24,4 +24,16 @@ describe('buildHtmlDocument', () => {
     const html = buildHtmlDocument({ title: 'T', bodyHtml: '', theme: 'light' })
     expect(html).not.toContain('#1e1e1e')
   })
+
+  test('themeVars palette overrides the preset css', () => {
+    const html = buildHtmlDocument({
+      title: 'T',
+      bodyHtml: '',
+      theme: 'dark',
+      themeVars: { bg: '#2e3440', fg: '#d8dee9', muted: '#7b869c', border: '#3b4252', accent: '#88c0d0' }
+    })
+    expect(html).toContain('#2e3440')
+    expect(html).toContain('#88c0d0')
+    expect(html).not.toContain('background: #1e1e1e')
+  })
 })

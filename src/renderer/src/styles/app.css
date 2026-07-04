@@ -142,6 +142,62 @@ body,
   cursor: pointer;
 }
 
+/* Tab bar */
+.jypora-tabbar {
+  display: flex;
+  flex-shrink: 0;
+  background: var(--sidebar-bg);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  padding-top: 4px;
+}
+
+.jypora-tabbar .tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 200px;
+  padding: 5px 8px 5px 12px;
+  font-size: 12.5px;
+  color: var(--muted);
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.jypora-tabbar .tab.active {
+  background: var(--bg);
+  color: var(--fg);
+  border-bottom: 2px solid var(--accent);
+}
+
+.jypora-tabbar .tab-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jypora-tabbar .tab-dirty {
+  color: var(--accent);
+  margin-right: 4px;
+}
+
+.jypora-tabbar .tab-close {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+
+.jypora-tabbar .tab-close:hover {
+  background: rgba(128, 128, 128, 0.2);
+  color: var(--fg);
+}
+
 /* Main */
 .jypora-main {
   flex: 1;

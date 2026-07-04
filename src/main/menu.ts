@@ -9,6 +9,7 @@ interface MenuOptions {
   readonly recentFiles: readonly string[]
   readonly activeThemeId: string
   readonly autoSave: boolean
+  readonly spellCheck: boolean
 }
 
 function send(win: BrowserWindow | null, action: MenuActionType): void {
@@ -106,7 +107,8 @@ export function buildMenu(getWindow: () => BrowserWindow | null, options: MenuOp
           ]
         },
         { type: 'separator' },
-        isMac ? { role: 'close' } : { role: 'quit' }
+        { label: 'Close Tab', accelerator: 'CmdOrCtrl+W', click: () => send(win(), 'close-tab') },
+        isMac ? { role: 'close', accelerator: 'CmdOrCtrl+Shift+W' } : { role: 'quit' }
       ]
     },
     {
@@ -123,7 +125,9 @@ export function buildMenu(getWindow: () => BrowserWindow | null, options: MenuOp
         { label: 'Search Files…', accelerator: 'CmdOrCtrl+P', click: () => send(win(), 'search-files') },
         { type: 'separator' },
         { label: 'Copy as Markdown', click: () => send(win(), 'copy-markdown') },
-        { label: 'Copy as HTML', click: () => send(win(), 'copy-html') }
+        { label: 'Copy as HTML', click: () => send(win(), 'copy-html') },
+        { type: 'separator' },
+        { label: 'Spell Check', type: 'checkbox', checked: options.spellCheck, click: () => send(win(), 'toggle-spellcheck') }
       ]
     },
     {
@@ -148,6 +152,9 @@ export function buildMenu(getWindow: () => BrowserWindow | null, options: MenuOp
     {
       label: 'View',
       submenu: [
+        { label: 'Next Tab', accelerator: 'Ctrl+Tab', click: () => send(win(), 'next-tab') },
+        { label: 'Previous Tab', accelerator: 'Ctrl+Shift+Tab', click: () => send(win(), 'prev-tab') },
+        { type: 'separator' },
         { label: 'Toggle Source Mode', accelerator: 'CmdOrCtrl+/', click: () => send(win(), 'toggle-source') },
         { label: 'Toggle Sidebar', accelerator: 'CmdOrCtrl+Shift+L', click: () => send(win(), 'toggle-sidebar') },
         { label: 'Toggle Outline', accelerator: 'CmdOrCtrl+Shift+O', click: () => send(win(), 'toggle-outline') },

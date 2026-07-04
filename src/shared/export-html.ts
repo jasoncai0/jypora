@@ -11,6 +11,25 @@ export interface HtmlExportOptions {
   readonly title: string
   readonly bodyHtml: string
   readonly theme?: 'light' | 'dark'
+  /** App theme palette (bg/fg/muted/border/accent…) — export follows it. */
+  readonly themeVars?: Readonly<Record<string, string>>
+}
+
+/** CSS that maps the active app theme onto the exported document. */
+export function themePaletteCss(vars: Readonly<Record<string, string>>): string {
+  const bg = vars.bg ?? '#ffffff'
+  const fg = vars.fg ?? '#222222'
+  const muted = vars.muted ?? '#8a8a8a'
+  const border = vars.border ?? '#eaeaea'
+  const accent = vars.accent ?? '#4c8bf5'
+  return `
+  body { background: ${bg}; color: ${fg}; }
+  pre { background: color-mix(in srgb, ${bg}, ${fg} 6%); }
+  blockquote { border-left-color: ${border}; color: ${muted}; }
+  th, td { border-color: ${border}; }
+  a { color: ${accent}; }
+  hr { border-color: ${border}; }
+`
 }
 
 const BASE_CSS = `
@@ -40,7 +59,12 @@ function escapeHtml(value: string): string {
 
 export function buildHtmlDocument(options: HtmlExportOptions): string {
   const theme = options.theme ?? 'light'
-  const themeCss = theme === 'dark' ? DARK_CSS : ''
+  // Prefer the full app palette when provided; fall back to the dark preset.
+  const themeCss = options.themeVars
+    ? themePaletteCss(options.themeVars)
+    : theme === 'dark'
+      ? DARK_CSS
+      : ''
   const body = mermaidToPreTags(options.bodyHtml)
   const mermaidScript = body.includes('class="mermaid"') ? MERMAID_EXPORT_SCRIPT : ''
   return `<!DOCTYPE html>
