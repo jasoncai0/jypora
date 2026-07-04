@@ -1,5 +1,6 @@
 import Store from 'electron-store'
 import { AppSettings, DEFAULT_SETTINGS } from '../shared/types'
+import { addRecent } from '../shared/recent'
 
 /**
  * Persistent application settings backed by electron-store. Reads return a
@@ -17,4 +18,10 @@ export function setSetting<K extends keyof AppSettings>(
 ): AppSettings {
   store.set(key, value)
   return getSettings()
+}
+
+/** Record a workspace as most-recently-used and return the updated settings. */
+export function pushRecentWorkspace(path: string): AppSettings {
+  const next = addRecent(getSettings().recentWorkspaces, path)
+  return setSetting('recentWorkspaces', next)
 }

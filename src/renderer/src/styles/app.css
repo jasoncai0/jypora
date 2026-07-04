@@ -237,3 +237,84 @@ body,
   opacity: 0.5;
   cursor: default;
 }
+
+/* Sidebar search + icons + recents */
+.sidebar-search {
+  margin: 4px 8px 8px;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 13px;
+  outline: none;
+}
+
+.file-icon {
+  display: inline-block;
+  width: 18px;
+  text-align: center;
+  margin-right: 2px;
+}
+
+.recents-title {
+  padding: 10px 12px 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Embedded terminal */
+.jypora-terminal {
+  height: 240px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  background: #1e1e1e;
+}
+
+.terminal-header {
+  padding: 4px 12px;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--sidebar-bg);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.terminal-host {
+  flex: 1;
+  overflow: hidden;
+  padding: 4px;
+}
+
+.terminal-error {
+  padding: 12px;
+  color: #e06c75;
+  font-size: 13px;
+}
+
+/* Mermaid diagrams (live preview + export) */
+.jypora-mermaid {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+  background: var(--bg);
+}
+
+.jypora-mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.jypora-mermaid-error {
+  padding: 10px 12px;
+  color: #e06c75;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+}

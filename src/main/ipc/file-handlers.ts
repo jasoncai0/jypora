@@ -1,8 +1,40 @@
 import { promises as fs } from 'node:fs'
+import { join } from 'node:path'
 import { dialog, ipcMain, BrowserWindow } from 'electron'
 import { IpcChannel } from '../../shared/ipc'
-import { buildFileNodes, isMarkdownFile } from '../../shared/filetree'
-import { OpenFileResult } from '../../shared/types'
+import { buildFileNodes, isMarkdownFile, shouldIgnore } from '../../shared/filetree'
+import { fuzzyMatch, rankMatches } from '../../shared/search'
+import { FileNode, OpenFileResult } from '../../shared/types'
+import { pushRecentWorkspace } from '../settings'
+
+const MAX_SEARCH_RESULTS = 200
+const MAX_SEARCH_DEPTH = 6
+
+/** Recursively collect markdown files under `root` whose name matches `query`. */
+async function searchMarkdown(root: string, query: string): Promise<FileNode[]> {
+  const results: FileNode[] = []
+  async function walk(dir: string, depth: number): Promise<void> {
+    if (depth > MAX_SEARCH_DEPTH || results.length >= MAX_SEARCH_RESULTS) return
+    let entries: import('node:fs').Dirent[]
+    try {
+      entries = await fs.readdir(dir, { withFileTypes: true })
+    } catch {
+      return
+    }
+    for (const entry of entries) {
+      if (shouldIgnore(entry.name)) continue
+      const full = join(dir, entry.name)
+      if (entry.isDirectory()) {
+        await walk(full, depth + 1)
+      } else if (isMarkdownFile(entry.name) && fuzzyMatch(entry.name, query)) {
+        results.push({ name: entry.name, path: full, isDirectory: false })
+        if (results.length >= MAX_SEARCH_RESULTS) return
+      }
+    }
+  }
+  await walk(root, 0)
+  return rankMatches(results, query)
+}
 
 const MARKDOWN_FILTERS = [
   { name: 'Markdown', extensions: ['md', 'markdown', 'mdown', 'mkd'] },
@@ -74,7 +106,15 @@ export function registerFileHandlers(getWindow: () => BrowserWindow | null): voi
     if (!win) return null
     const result = await dialog.showOpenDialog(win, { properties: ['openDirectory'] })
     if (result.canceled || result.filePaths.length === 0) return null
+    pushRecentWorkspace(result.filePaths[0])
     return result.filePaths[0]
+  })
+
+  ipcMain.handle(IpcChannel.SearchWorkspace, async (_e, root: string, query: string) => {
+    if (typeof root !== 'string' || typeof query !== 'string' || query.trim().length === 0) {
+      return []
+    }
+    return searchMarkdown(root, query)
   })
 
   ipcMain.handle(IpcChannel.ReadDir, async (_e, dirPath: string) => {

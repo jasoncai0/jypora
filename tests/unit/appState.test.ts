@@ -35,14 +35,15 @@ describe('appState reducer', () => {
     expect(next.workspaceRoot).toBe('/w')
   })
 
-  test('set-theme changes theme', () => {
-    expect(reducer(initialState, { type: 'set-theme', theme: 'dark' }).theme).toBe('dark')
+  test('set-theme changes themeId', () => {
+    expect(reducer(initialState, { type: 'set-theme', themeId: 'dracula' }).themeId).toBe('dracula')
   })
 
   test.each([
     ['toggle-source', 'sourceMode'],
     ['toggle-sidebar', 'sidebarVisible'],
     ['toggle-outline', 'outlineVisible'],
+    ['toggle-terminal', 'terminalVisible'],
     ['toggle-focus', 'focusMode'],
     ['toggle-typewriter', 'typewriterMode']
   ] as const)('%s flips %s', (type, key) => {

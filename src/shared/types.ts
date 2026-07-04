@@ -20,21 +20,25 @@ export interface OpenFileResult {
 export type ThemeName = 'light' | 'dark'
 
 export interface AppSettings {
-  readonly theme: ThemeName
+  readonly themeId: string
   readonly followSystemTheme: boolean
   readonly autoSave: boolean
   readonly autoSaveDelayMs: number
   readonly sidebarVisible: boolean
   readonly outlineVisible: boolean
+  readonly terminalVisible: boolean
+  readonly recentWorkspaces: readonly string[]
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
-  theme: 'light',
+  themeId: 'light',
   followSystemTheme: true,
   autoSave: false,
   autoSaveDelayMs: 1500,
   sidebarVisible: true,
-  outlineVisible: false
+  outlineVisible: false,
+  terminalVisible: false,
+  recentWorkspaces: []
 }
 
 /** True when the document has unsaved edits. */

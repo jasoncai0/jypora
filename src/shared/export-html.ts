@@ -1,6 +1,10 @@
+import { MERMAID_EXPORT_SCRIPT, mermaidToPreTags } from './mermaid'
+
 /**
  * Build a self-contained HTML document from rendered body HTML. Pure function
- * so it can be unit-tested and reused by the export pipeline.
+ * so it can be unit-tested and reused by the export pipeline. Mermaid code
+ * blocks are converted to renderable `<pre class="mermaid">` and the mermaid
+ * runtime is injected only when diagrams are present.
  */
 
 export interface HtmlExportOptions {
@@ -37,6 +41,8 @@ function escapeHtml(value: string): string {
 export function buildHtmlDocument(options: HtmlExportOptions): string {
   const theme = options.theme ?? 'light'
   const themeCss = theme === 'dark' ? DARK_CSS : ''
+  const body = mermaidToPreTags(options.bodyHtml)
+  const mermaidScript = body.includes('class="mermaid"') ? MERMAID_EXPORT_SCRIPT : ''
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -46,7 +52,8 @@ export function buildHtmlDocument(options: HtmlExportOptions): string {
 <style>${BASE_CSS}${themeCss}</style>
 </head>
 <body>
-${options.bodyHtml}
+${body}
+${mermaidScript}
 </body>
 </html>`
 }

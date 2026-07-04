@@ -10,13 +10,23 @@ export const IpcChannel = {
   FileNew: 'file:new',
   DialogOpenFolder: 'dialog:open-folder',
   ReadDir: 'fs:read-dir',
+  SearchWorkspace: 'fs:search-workspace',
   ExportHtml: 'export:html',
   ExportPdf: 'export:pdf',
   ExportDocx: 'export:docx',
   GetSettings: 'settings:get',
   SetSetting: 'settings:set',
+  GetThemes: 'themes:get',
+  // terminal (embedded agent/terminal panel)
+  TerminalStart: 'terminal:start',
+  TerminalInput: 'terminal:input',
+  TerminalResize: 'terminal:resize',
+  TerminalKill: 'terminal:kill',
+  TerminalData: 'terminal:data',
+  TerminalExit: 'terminal:exit',
   // main -> renderer
-  MenuAction: 'menu:action'
+  MenuAction: 'menu:action',
+  OpenRecent: 'menu:open-recent'
 } as const
 
 export type IpcChannelName = (typeof IpcChannel)[keyof typeof IpcChannel]
@@ -25,16 +35,38 @@ export type IpcChannelName = (typeof IpcChannel)[keyof typeof IpcChannel]
 export type MenuActionType =
   | 'new'
   | 'open'
+  | 'open-folder'
   | 'save'
   | 'save-as'
   | 'toggle-source'
   | 'toggle-sidebar'
   | 'toggle-outline'
+  | 'toggle-terminal'
   | 'toggle-focus'
   | 'toggle-typewriter'
   | 'find'
+  | 'search-files'
   | 'export-html'
   | 'export-pdf'
   | 'export-docx'
-  | 'theme-light'
-  | 'theme-dark'
+  // formatting actions (see renderer/editor/format.ts FormatAction)
+  | 'fmt:bold'
+  | 'fmt:italic'
+  | 'fmt:strike'
+  | 'fmt:inline-code'
+  | 'fmt:link'
+  | 'fmt:code-block'
+  | 'fmt:quote'
+  | 'fmt:bullet-list'
+  | 'fmt:ordered-list'
+  | 'fmt:hr'
+  | 'fmt:table'
+  | 'fmt:paragraph'
+  | 'fmt:heading-1'
+  | 'fmt:heading-2'
+  | 'fmt:heading-3'
+  | 'fmt:heading-4'
+  | 'fmt:heading-5'
+  | 'fmt:heading-6'
+  // theme selection carries the theme id
+  | `theme:${string}`

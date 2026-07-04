@@ -1,6 +1,6 @@
 {
   "name": "jypora",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "An open-source, Typora-like seamless live-preview Markdown editor",
   "author": "jasoncai0",
   "license": "MIT",
@@ -25,7 +25,11 @@
   "dependencies": {
     "@milkdown/crepe": "^7.5.0",
     "@milkdown/kit": "^7.5.0",
-    "electron-store": "^10.0.0"
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0",
+    "electron-store": "^10.0.0",
+    "mermaid": "^11.4.0",
+    "node-pty": "^1.0.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",
@@ -47,7 +51,8 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "electron",
-      "esbuild"
+      "esbuild",
+      "node-pty"
     ]
   }
 }

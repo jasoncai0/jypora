@@ -20,16 +20,17 @@ Status of jypora against the [FEATURES.md](./FEATURES.md) checklist. Legend:
 | Links & images | ✅ | |
 | Horizontal rules | ✅ | |
 | Math (KaTeX) | ✅ | inline `$..$` and block `$$..$$` |
-| Mermaid diagrams | 🟡 | code block renders; live diagram preview planned |
+| Mermaid diagrams | ✅ | live inline rendering via code-block preview + export |
 | Footnotes | 🟡 | parsed; dedicated UI planned |
 
 ## Files & workspace
 | Feature | Status | Notes |
 |---|---|---|
 | New / Open / Save / Save As | ✅ | native dialogs + menu shortcuts |
-| Open folder as workspace | ✅ | sidebar file tree |
+| Open folder as workspace | ✅ | sidebar file tree with file-type icons |
 | File tree navigation | ✅ | click to open `.md` |
-| Recent files | ⏳ | |
+| File search / filter | ✅ | fuzzy sidebar search (`Cmd+P`), recursive |
+| Recent workspaces | ✅ | persisted; File ▸ Open Recent + sidebar picker |
 | Auto-save | 🟡 | setting scaffolded; timer wiring planned |
 | Unsaved indicator | ✅ | status bar + window title dot |
 
@@ -48,8 +49,16 @@ Status of jypora against the [FEATURES.md](./FEATURES.md) checklist. Legend:
 |---|---|---|
 | Light theme | ✅ | |
 | Dark theme | ✅ | |
-| Runtime switching | ✅ | menu |
+| Preset themes | ✅ | Sepia, Nord, Solarized, Dracula |
+| Custom / pluggable themes | ✅ | JSON drop-in under `<userData>/themes/` |
+| Runtime switching | ✅ | View ▸ Theme (radio) |
 | Follows OS appearance | ✅ | `nativeTheme` |
+
+## Productivity
+| Feature | Status | Notes |
+|---|---|---|
+| Formatting keyboard shortcuts | ✅ | bold/italic/strike/code/link/headings/lists/quote/table/hr |
+| Embedded terminal panel | ✅ | node-pty + xterm, opens in the document's directory |
 
 ## Editing tools
 | Feature | Status | Notes |
