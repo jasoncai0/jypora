@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { Editor, FormatDispatch } from './components/Editor'
 import { Sidebar } from './components/Sidebar'
 import { Outline } from './components/Outline'
@@ -6,6 +7,7 @@ import { StatusBar } from './components/StatusBar'
 import { FindReplace } from './components/FindReplace'
 import { TerminalPanel } from './components/TerminalPanel'
 import { useMenuActions } from './hooks/useMenuActions'
+import { usePanelSize } from './hooks/usePanelSize'
 import { reducer, initialState } from './state/appState'
 import { applyTheme } from './themes/applyTheme'
 import { documentTitle } from '../../shared/document'
@@ -27,6 +29,11 @@ export function App(): JSX.Element {
   const formatRef = useRef<FormatDispatch | null>(null)
   const stateRef = useRef(state)
   stateRef.current = state
+
+  // Drag-to-resize panel sizes (persisted per panel in localStorage).
+  const sidebarPanel = usePanelSize('sidebar', { initial: 240, min: 160, max: 480, axis: 'x', sign: 1 })
+  const outlinePanel = usePanelSize('outline', { initial: 220, min: 160, max: 440, axis: 'x', sign: -1 })
+  const terminalPanel = usePanelSize('terminal', { initial: 240, min: 120, max: 600, axis: 'y', sign: -1 })
 
   // Load persisted settings and available themes once.
   useEffect(() => {
@@ -152,18 +159,33 @@ export function App(): JSX.Element {
     scrollToHeadingIndex(index)
   }, [])
 
+  const panelVars = {
+    '--sidebar-w': `${sidebarPanel.size}px`,
+    '--outline-w': `${outlinePanel.size}px`,
+    '--terminal-h': `${terminalPanel.size}px`
+  } as CSSProperties
+
   return (
-    <div className={`jypora-app ${state.focusMode ? 'focus' : ''}`}>
+    <div className={`jypora-app ${state.focusMode ? 'focus' : ''}`} style={panelVars}>
       {state.sidebarVisible && !state.focusMode && (
-        <Sidebar
-          workspaceRoot={state.workspaceRoot}
-          activePath={state.doc.filePath}
-          recentWorkspaces={recentWorkspaces}
-          searchFocusToken={searchFocusToken}
-          onOpenFolder={doOpenFolder}
-          onOpenWorkspace={openWorkspace}
-          onOpenFile={openPath}
-        />
+        <>
+          <Sidebar
+            workspaceRoot={state.workspaceRoot}
+            activePath={state.doc.filePath}
+            recentWorkspaces={recentWorkspaces}
+            searchFocusToken={searchFocusToken}
+            onOpenFolder={doOpenFolder}
+            onOpenWorkspace={openWorkspace}
+            onOpenFile={openPath}
+          />
+          <div
+            className="panel-handle vertical"
+            data-testid="sidebar-handle"
+            onMouseDown={sidebarPanel.beginDrag}
+            role="separator"
+            aria-orientation="vertical"
+          />
+        </>
       )}
       <main className="jypora-main">
         {state.findVisible && (
@@ -183,11 +205,31 @@ export function App(): JSX.Element {
             formatRef={formatRef}
           />
         </div>
-        {state.terminalVisible && !state.focusMode && <TerminalPanel docPath={state.doc.filePath} />}
+        {state.terminalVisible && !state.focusMode && (
+          <>
+            <div
+              className="panel-handle horizontal"
+              data-testid="terminal-handle"
+              onMouseDown={terminalPanel.beginDrag}
+              role="separator"
+              aria-orientation="horizontal"
+            />
+            <TerminalPanel docPath={state.doc.filePath} />
+          </>
+        )}
         <StatusBar content={state.doc.content} dirty={isDirty(state.doc)} sourceMode={state.sourceMode} />
       </main>
       {state.outlineVisible && !state.focusMode && (
-        <Outline content={state.doc.content} onSelect={goToHeading} />
+        <>
+          <div
+            className="panel-handle vertical"
+            data-testid="outline-handle"
+            onMouseDown={outlinePanel.beginDrag}
+            role="separator"
+            aria-orientation="vertical"
+          />
+          <Outline content={state.doc.content} onSelect={goToHeading} />
+        </>
       )}
     </div>
   )

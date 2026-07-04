@@ -79,7 +79,7 @@ body,
 
 /* Sidebar */
 .jypora-sidebar {
-  width: 240px;
+  width: var(--sidebar-w, 240px);
   flex-shrink: 0;
   background: var(--sidebar-bg);
   border-right: 1px solid var(--border);
@@ -207,7 +207,7 @@ body,
 
 /* Outline */
 .jypora-outline {
-  width: 220px;
+  width: var(--outline-w, 220px);
   flex-shrink: 0;
   border-left: 1px solid var(--border);
   background: var(--sidebar-bg);
@@ -329,7 +329,7 @@ body,
 
 /* Embedded terminal */
 .jypora-terminal {
-  height: 240px;
+  height: var(--terminal-h, 240px);
   flex-shrink: 0;
   border-top: 1px solid var(--border);
   display: flex;
@@ -359,6 +359,31 @@ body,
   padding: 12px;
   color: #e06c75;
   font-size: 13px;
+}
+
+/* Drag handles between panels */
+.panel-handle {
+  flex-shrink: 0;
+  background: transparent;
+  transition: background 0.15s;
+  z-index: 5;
+}
+
+.panel-handle:hover,
+.panel-handle:active {
+  background: color-mix(in srgb, var(--accent), transparent 60%);
+}
+
+.panel-handle.vertical {
+  width: 5px;
+  cursor: col-resize;
+  margin-left: -2px;
+}
+
+.panel-handle.horizontal {
+  height: 5px;
+  cursor: row-resize;
+  margin-bottom: -2px;
 }
 
 /* Mermaid diagrams (live preview + export) */

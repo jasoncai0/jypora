@@ -115,6 +115,40 @@ test('outline click and anchor links scroll to headings', async () => {
     .toBe(true)
 })
 
+test('sidebar can be resized by dragging its handle', async () => {
+  const sidebar = page.locator('.jypora-sidebar')
+  const handle = page.getByTestId('sidebar-handle')
+  const before = (await sidebar.boundingBox())!.width
+  const box = (await handle.boundingBox())!
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(box.x + 120, box.y + box.height / 2, { steps: 5 })
+  await page.mouse.up()
+  const after = (await sidebar.boundingBox())!.width
+  expect(after).toBeGreaterThan(before + 60)
+})
+
+test('terminal panel can be resized by dragging its handle', async () => {
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'toggle-terminal')
+  })
+  const terminal = page.locator('.jypora-terminal')
+  await terminal.waitFor()
+  const before = (await terminal.boundingBox())!.height
+  const handle = page.getByTestId('terminal-handle')
+  const box = (await handle.boundingBox())!
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(box.x + box.width / 2, box.y - 100, { steps: 5 })
+  await page.mouse.up()
+  const after = (await terminal.boundingBox())!.height
+  expect(after).toBeGreaterThan(before + 50)
+  // Hide the terminal again so later tests keep a stable layout.
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'toggle-terminal')
+  })
+})
+
 test('mermaid code blocks render as diagrams', async () => {
   // Drive source mode via the menu-action IPC, type a mermaid block, switch back.
   await app.evaluate(({ BrowserWindow }) => {
